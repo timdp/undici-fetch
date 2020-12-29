@@ -1,83 +1,17 @@
 'use strict'
 
 const { types } = require('util')
+const {
+  isForbiddenHeaderName,
+  isForbiddenResponseHeaderName,
+  validateHeaderName,
+  validateHeaderValue
+} = require('./headersUtils')
 
 const hasOwnProperty = Object.prototype.hasOwnProperty
 
-function validateHeaderName (name) {
-  if (!name || name.length === 0) throw TypeError(`Invalid header name ${name}`)
-
-  for (let i = 0, cc = name.charCodeAt(0); i < name.length; i++, cc = name.charCodeAt(i)) {
-    if (
-    // check most common characters first
-      (cc >= 97 && cc <= 122) || // a-z
-      (cc >= 65 && cc <= 90) || // A-z
-      cc === 45 || // -
-      cc === 33 || // !
-      (cc >= 35 && cc <= 39) || // # $ % & '
-      cc === 42 || // *
-      cc === 43 || // +
-      cc === 46 || // .
-      (cc >= 48 && cc <= 57) || // 0-9
-      (cc >= 94 && cc <= 96) || // ^ _ `
-      cc === 124 || // |
-      cc === 126 // ~
-    ) {
-      continue
-    } else {
-      throw TypeError(`Invalid header name ${name}`)
-    }
-  }
-}
-
-function validateHeaderValue (name, value) {
-  if (!value || value.length === 0) throw TypeError(`Invalid value ${value} for header ${name}`)
-
-  for (let i = 0, cc = value.charCodeAt(0); i < value.length; i++, cc = value.charCodeAt(i)) {
-    if ((cc >= 32 && cc <= 126) || (cc >= 128 && cc <= 255) || cc === 9) {
-      continue
-    } else {
-      throw TypeError(`Invalid value ${value} for header ${name}`)
-    }
-  }
-}
-
 function normalize (header) {
   return header.trim()
-}
-
-function isForbiddenHeaderName (name) {
-  return (
-    name === 'accept-charset' ||
-    name === 'accept-encoding' ||
-    name === 'access-control-request-headers' ||
-    name === 'access-control-request-method' ||
-    name === 'connection' ||
-    name === 'content-length' ||
-    name === 'cookie' ||
-    name === 'cookie2' ||
-    name === 'data' ||
-    name === 'dnt' ||
-    name === 'expect' ||
-    name === 'host' ||
-    name === 'keep-alive' ||
-    name === 'origin' ||
-    name === 'referer' ||
-    name === 'te' ||
-    name === 'trailer' ||
-    name === 'transfer-encoding' ||
-    name === 'upgrade' ||
-    name === 'via' ||
-    String.prototype.includes.call(name, 'proxy-') ||
-    String.prototype.includes.call(name, 'sec-')
-  )
-}
-
-function isForbiddenResponseHeaderName (name) {
-  return (
-    name === 'set-cookie' ||
-    name === 'set-cookie2'
-  )
 }
 
 const kHeadersList = Symbol('headers list')
@@ -101,10 +35,10 @@ class Headers {
   }
 
   append (_name, _value) {
+    validateHeaderName(_name)
     const name = _name.toLowerCase()
-    validateHeaderName(name)
+    validateHeaderValue(name, _value)
     const value = normalize(_value)
-    validateHeaderValue(name, value)
 
     if (this.guard === 'immutable') {
       throw TypeError('headers instance is immutable')
