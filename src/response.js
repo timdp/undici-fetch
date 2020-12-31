@@ -3,7 +3,19 @@
 const Body = require('./body')
 const Headers = require('./headers')
 
+/**
+ * Represents a WHATWG Fetch Spec [Response Class](https://fetch.spec.whatwg.org/#response-class)
+ */
 class Response extends Body {
+  /**
+   * @typedef ResponseInit
+   * @property {number} [status]
+   * @property {string} [statusText]
+   * @property {Headers | import('./headers').HeadersInit} [headers]
+   * 
+   * @param {import('./body').BodyInput} body 
+   * @param {ResponseInit} [init]
+   */
   constructor (body, init = {}) {
     super(body)
 
@@ -28,6 +40,9 @@ class Response extends Body {
     this.type = 'default'
   }
 
+  /**
+   * Returns a new Response instance inheriting from the current instance. Throws an error if the current instance `.bodyUsed` is `true`.
+   */
   clone () {
     if (this.bodyUsed) {
       throw TypeError('Cannot clone Response - bodyUsed is true')
@@ -36,17 +51,24 @@ class Response extends Body {
     return new Response(this.body, {
       headers: this.headers,
       status: this.status,
-      statusText: this.statusText,
-      url: this.url
+      statusText: this.statusText
     })
   }
 
+  /**
+   * Generates a Response instance with `type` set to `'error'` and a `body` set to `null`.
+   */
   static error () {
     const response = new Response(null)
     response.type = 'error'
     return response
   }
 
+  /**
+   * Generates a redirect Response instance with a `'location'` header
+   * @param {string} url 
+   * @param {number} status Must be 301, 302, 303, 307, or 308
+   */
   static redirect (url, status) {
     if (!((status >= 301 && status <= 303) || status === 307 || status === 308)) {
       throw RangeError(`redirect status must be 301, 302, 303, 307, or 308. Found ${status}`)

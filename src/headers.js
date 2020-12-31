@@ -6,10 +6,16 @@ const { normalizeAndValidateHeaderName, normalizeAndValidateHeaderArguments } = 
 
 const kHeaders = Symbol('headers')
 
+/**
+ * @typedef {[string, string][] | Record<string, string>} HeadersInit
+ */
+
+/**
+ * Represents a WHATWG Fetch Spec [Header class](https://fetch.spec.whatwg.org/#headers-class)
+ */
 class Headers {
   /**
-   *
-   * @param {[string, string][] | Record<string, string>} init Initial header list to be cloned into the new instance
+   * @param {HeadersInit} init Initial header list to be cloned into the new instance
    */
   constructor (init) {
     this[kHeaders] = new Map()
@@ -28,6 +34,11 @@ class Headers {
     }
   }
 
+  /**
+   * Adds an entry to the instance
+   * @param {string} name 
+   * @param {string} value 
+   */
   append (name, value) {
     const [normalizedHeaderName, normalizedHeaderValue] = normalizeAndValidateHeaderArguments(name, value)
 
@@ -39,12 +50,23 @@ class Headers {
     }
   }
 
+  /**
+   * Removes an entry from the instance
+   * @param {string} name 
+   */
   delete (name) {
     const normalizedHeaderName = normalizeAndValidateHeaderName(name)
 
     Map.prototype.delete.call(this[kHeaders], normalizedHeaderName)
   }
 
+  /**
+   * Retrieves an entry from the instance. For headers with multiple values, they are returned in a string joined by `', '` characters.
+   * 
+   * For example if the header entry `'foo'` had values `'fuzz'` and `'buzz'`, calling `get('foo')` will return `'fuzz, buzz'`.
+   * @param {string} name
+   * @returns {string | null}
+   */
   get (name) {
     const normalizedHeaderName = normalizeAndValidateHeaderName(name)
 
@@ -52,18 +74,31 @@ class Headers {
     return values === undefined ? null : values.join(', ')
   }
 
+  /**
+   * Checks for the existence of an entry in the instance
+   * @param {string} name 
+   * @returns {boolean}
+   */
   has (name) {
     const normalizedHeaderName = normalizeAndValidateHeaderName(name)
 
     return Map.prototype.has.call(this[kHeaders], normalizedHeaderName)
   }
 
+  /**
+   * Overrides an entry on the instance. Use [append]{@link Headers.append} for non-destructive operation.
+   * @param {*} name 
+   * @param {*} value 
+   */
   set (name, value) {
     const [normalizedHeaderName, normalizedHeaderValue] = normalizeAndValidateHeaderArguments(name, value)
 
     Map.prototype.set.call(this[kHeaders], normalizedHeaderName, [normalizedHeaderValue])
   }
 
+  /**
+   * @returns {[string, string[]]}
+   */
   * [Symbol.iterator] () {
     for (const header of this[kHeaders]) {
       yield header

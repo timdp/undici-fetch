@@ -2,18 +2,36 @@
 
 const stream = require('stream')
 
+/**
+ * Guard for checking if obj is a Node.js Readable stream
+ * @param {unknown} obj 
+ * @returns {obj is import('stream').Readable}
+ */
 function isReadable (obj) {
   return obj instanceof stream.Stream && typeof obj._read === 'function' && typeof obj._readableState === 'object'
 }
 
+/**
+ * Returns a custom TypeError for a invalid header name
+ * @param {string} name 
+ */
 function HeaderNameValidationError (name) {
   return TypeError(`Invalid Header name: ${name}`)
 }
 
+/**
+ * Returns a custom TypeError for a invalid header value
+ * @param {string} name 
+ * @param {string} value 
+ */
 function HeaderValueValidationError (name, value) {
   return TypeError(`Invalid Header value: ${value} for Header name: ${name}`)
 }
 
+/**
+ * Validates a header name based on the Fetch Spec concept [Header Name](https://fetch.spec.whatwg.org/#concept-header-name)
+ * @param {string} name 
+ */
 function validateHeaderName (name) {
   if (!name || name.length === 0) throw HeaderNameValidationError(name)
 
@@ -40,6 +58,11 @@ function validateHeaderName (name) {
   }
 }
 
+/**
+ * Validates a header value based on the Fetch Spec concept [Header Value](https://fetch.spec.whatwg.org/#concept-header-value)
+ * @param {string} name 
+ * @param {string} value 
+ */
 function validateHeaderValue (name, value) {
   if (!value || value.length === 0) throw HeaderValueValidationError(name, value)
 
@@ -53,18 +76,35 @@ function validateHeaderValue (name, value) {
   }
 }
 
+/**
+ * Normalizes and validates a header name by calling `.toLowerCase()` and [validateHeaderName]{@link validateHeaderName}
+ * @param {string} name 
+ * @returns {string}
+ */
 function normalizeAndValidateHeaderName (name) {
   const normalizedHeaderName = name.toLowerCase()
   validateHeaderName(normalizedHeaderName)
   return normalizedHeaderName
 }
 
+/**
+ * Normalizes and validates a header value by calling `.trim()` and [validateHeaderValue]{@link validateHeaderValue}
+ * @param {string} name 
+ * @param {string} value 
+ * @returns {string}
+ */
 function normalizeAndValidateHeaderValue (name, value) {
   const normalizedHeaderValue = value.trim()
   validateHeaderValue(name, normalizedHeaderValue)
   return normalizedHeaderValue
 }
 
+/**
+ * Utility function for normalizing and validating a header entry.
+ * @param {string} name 
+ * @param {string} value 
+ * @returns {[string, string]} [normalizedName, normalizedValue]
+ */
 function normalizeAndValidateHeaderArguments (name, value) {
   return [normalizeAndValidateHeaderName(name), normalizeAndValidateHeaderValue(name, value)]
 }

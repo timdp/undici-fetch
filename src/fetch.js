@@ -5,6 +5,11 @@ const Request = require('./request')
 const Response = require('./response')
 const { STATUS_CODES } = require('http')
 
+/**
+ * `buildFetch` returns the undici-fetch client that is used like a standard WHATWG fetch client. The client reuses Undici.Pool instances for every unique request url origin. The pools are memoized as the client instance is used so that subsequent calls to the same origin are faster.
+ * 
+ * For now, you must call `.close()` on the fetch instance in order to prevent memory leaks. This method iterates through the pool Map and closes all of them in parallel. This will be removed in v1 after an auto-close feature is implemented.
+ */
 function buildFetch () {
   if (arguments.length > 0) {
     throw Error('Did you forget to build the instance? Try: `const fetch = require(\'fetch\')()`')
@@ -12,6 +17,15 @@ function buildFetch () {
 
   const clientMap = new Map()
 
+  /**
+   * @typedef FetchInit
+   * @property {AbortSignal} [signal]
+   * 
+   * @param {string | Request} resource 
+   * @param {FetchInit & import('./request').RequestInit} init
+   * 
+   * @returns {Promise<Response>}
+   */
   function fetch (resource, init = {}) {
     const request = new Request(resource, init)
 
@@ -41,6 +55,9 @@ function buildFetch () {
     })
   }
 
+  /**
+   * @returns {Promise<void>}
+   */
   fetch.close = () => {
     const clientClosePromises = []
     for (const [, client] of clientMap) {

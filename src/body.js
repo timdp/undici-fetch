@@ -5,9 +5,18 @@ const { isReadable } = require('./utils')
 const kBody = Symbol('body')
 const kBodyUsed = Symbol('bodyUsed')
 
+/** 
+ * @typedef {import('stream').Readable} Readable 
+ * @typedef {Readable | null} BodyInput
+ * */
+
+
+/**
+ * Represents a WHATWG Fetch Spec [Body Mixin](https://fetch.spec.whatwg.org/#body-mixin)
+ */
 class Body {
   /**
-   * @param {import('stream').Readable | null} input
+   * @param {BodyInput} input
    */
   constructor (input = null) {
     if (input != null && !isReadable(input)) {
@@ -47,6 +56,9 @@ class Body {
     throw Error('Body.formData() is not supported yet by undici-fetch')
   }
 
+  /**
+   * @returns {Promise<unknown | null>}
+   */
   async json () {
     return JSON.parse(await this.text())
   }
